@@ -35,6 +35,8 @@
             onValue(gameRef, (snapshot) => {
                 const data = snapshot.val();
                 if(!data) return;
+                
+                initGrid();
                 if(data.tiles) {
                     data.tiles.forEach(t => {
                         let el = document.getElementById(`t-${t.id}`);
@@ -46,6 +48,7 @@
                         }
                     });
                 }
+
                 const c = document.getElementById('p-list');
                 c.innerHTML = '';
                 if(data.players) {
@@ -70,6 +73,11 @@
             update(gameRef, { players: localPlayers });
         };
 
+        window.removeP = (i) => {
+            localPlayers.splice(i, 1);
+            update(gameRef, { players: localPlayers });
+        };
+
         window.setF = () => {
             const f = document.getElementById('f_in').value.toUpperCase();
             let r = 1, b = "", ts = [];
@@ -78,8 +86,7 @@
                 else { buildR(b, r, ts); r++; b = p; }
             });
             buildR(b, r, ts);
-            currentTiles = ts;
-            set(gameRef, { tiles: ts, players: localPlayers });
+            update(gameRef, { tiles: ts });
         };
 
         function buildR(txt, row, arr) {
@@ -104,21 +111,22 @@
 
         window.flipL = () => {
             currentTiles.forEach((t, index) => {
-                if(t.high) {
-                    currentTiles[index].high = false;
-                    currentTiles[index].rev = true;
-                }
+                if(t.high) { currentTiles[index].high = false; currentTiles[index].rev = true; }
             });
             update(gameRef, { tiles: currentTiles });
-            document.getElementById('l_in').value = '';
-        };
+        }
 
         window.sol = () => {
             currentTiles.forEach((t, index) => currentTiles[index].rev = true);
             update(gameRef, { tiles: currentTiles });
         };
 
-        window.res = () => {
+        window.resTab = () => {
+            update(gameRef, { tiles: [] });
+            document.getElementById('f_in').value = '';
+        };
+
+        window.resAll = () => {
             set(gameRef, { tiles: [], players: [] }).then(() => location.reload());
         };
 
@@ -137,7 +145,14 @@
                 const l = document.getElementById('r-pl');
                 l.innerHTML = '';
                 localPlayers.forEach((p, i) => {
-                    l.innerHTML += `<div class="r-item" style="border-left:5px solid ${p.color}"><span>${p.name}</span><input type="number" value="${p.score}" oninput="upS(${i},this.value)" style="width:70px"></div>`;
+                    l.innerHTML += `
+                        <div class="r-item" style="border-left:5px solid ${p.color}">
+                            <span>${p.name}</span>
+                            <div style="display:flex; gap:5px">
+                                <input type="number" value="${p.score}" oninput="upS(${i},this.value)" style="width:60px">
+                                <button onclick="removeP(${i})" style="width:30px; background:red; padding:5px">X</button>
+                            </div>
+                        </div>`;
                 });
             });
         }
@@ -158,9 +173,8 @@
         .letter { position: absolute; color: black; font-size: 2.2rem; font-weight: 900; backface-visibility: hidden; transform: rotateY(180deg); }
         .p-disp { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
         .p-c { padding: 10px 20px; border-bottom: 5px solid #ccc; text-align: center; min-width: 100px; background: rgba(255,255,255,0.05); }
-        .p-n { font-size: 0.8rem; opacity: 0.7; }
         .p-s { font-size: 2rem; }
-        .r-cont { max-width: 800px; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
+        .r-cont { max-width: 850px; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
         .r-box { background: #333; padding: 15px; border-radius: 10px; }
         input, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 5px; border: none; font-weight: bold; box-sizing: border-box; }
         button { cursor: pointer; color: white; text-transform: uppercase; }
@@ -172,27 +186,30 @@
         <button class="m-btn" onclick="start('tabellone')">Schermo Tabellone</button>
         <button class="m-btn" onclick="start('regia')" style="border-color: var(--accent);">Console Regia</button>
     </div>
+
     <div id="view-tabellone">
         <div class="board"><div id="grid" class="frame"></div></div>
         <div id="p-list" class="p-disp"></div>
     </div>
+
     <div id="view-regia">
         <div class="r-cont">
             <div class="r-box">
                 <input type="text" id="f_in" placeholder="FRASE">
-                <button onclick="setF()" style="background:#0055ff">CARICA</button>
+                <button onclick="setF()" style="background:#0055ff">CARICA FRASE</button>
+                <button onclick="resTab()" style="background:#555">RESET SOLO TABELLONE</button>
                 <hr style="opacity:0.2; margin:15px 0">
                 <input type="text" id="l_in" maxlength="1" style="text-align:center; font-size:1.5rem">
-                <button onclick="preL()" style="background:var(--accent)">PRENOTA TUTTE</button>
-                <button onclick="flipL()" style="background:#28a745">GIRA TUTTE</button>
+                <button onclick="preL()" style="background:var(--accent)">PRENOTA</button>
+                <button onclick="flipL()" style="background:#28a745">GIRA</button>
                 <button onclick="sol()" style="background:#cc0000">SOLUZIONE</button>
             </div>
             <div class="r-box">
                 <input type="text" id="pn" placeholder="Nome Giocatore">
                 <input type="color" id="pc" value="#ffffff" style="height:50px">
-                <button onclick="addP()" style="background:orange; color:black">AGGIUNGI</button>
+                <button onclick="addP()" style="background:orange; color:black">AGGIUNGI CONCORRENTE</button>
                 <div id="r-pl"></div>
-                <button onclick="res()" style="background:#555; margin-top:20px">RESET TOTALE</button>
+                <button onclick="resAll()" style="background:#000; margin-top:20px; border:1px solid red">RESET TOTALE (RELOAD)</button>
             </div>
         </div>
     </div>
