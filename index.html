@@ -78,6 +78,7 @@
                 else { buildR(b, r, ts); r++; b = p; }
             });
             buildR(b, r, ts);
+            currentTiles = ts;
             set(gameRef, { tiles: ts, players: localPlayers });
         };
 
@@ -89,33 +90,36 @@
 
         window.preL = () => {
             const lettr = document.getElementById('l_in').value.toUpperCase();
-            let count = 0;
-            currentTiles.forEach(t => {
+            let delayCount = 0;
+            currentTiles.forEach((t, index) => {
                 if(t.l === lettr && !t.rev) {
                     setTimeout(() => {
-                        t.high = true;
+                        currentTiles[index].high = true;
                         update(gameRef, { tiles: currentTiles });
-                    }, count * 1200);
-                    count++;
+                    }, delayCount * 1200);
+                    delayCount++;
                 }
             });
         };
 
         window.flipL = () => {
-            currentTiles.forEach(t => { if(t.high) { t.high = false; t.rev = true; } });
+            currentTiles.forEach((t, index) => {
+                if(t.high) {
+                    currentTiles[index].high = false;
+                    currentTiles[index].rev = true;
+                }
+            });
             update(gameRef, { tiles: currentTiles });
+            document.getElementById('l_in').value = '';
         };
 
         window.sol = () => {
-            currentTiles.forEach(t => t.rev = true);
+            currentTiles.forEach((t, index) => currentTiles[index].rev = true);
             update(gameRef, { tiles: currentTiles });
         };
 
         window.res = () => {
-            localPlayers = [];
-            currentTiles = [];
-            set(gameRef, { tiles: [], players: [] });
-            location.reload();
+            set(gameRef, { tiles: [], players: [] }).then(() => location.reload());
         };
 
         function initGrid() {
@@ -179,8 +183,8 @@
                 <button onclick="setF()" style="background:#0055ff">CARICA</button>
                 <hr style="opacity:0.2; margin:15px 0">
                 <input type="text" id="l_in" maxlength="1" style="text-align:center; font-size:1.5rem">
-                <button onclick="preL()" style="background:var(--accent)">PRENOTA</button>
-                <button onclick="flipL()" style="background:#28a745">GIRA</button>
+                <button onclick="preL()" style="background:var(--accent)">PRENOTA TUTTE</button>
+                <button onclick="flipL()" style="background:#28a745">GIRA TUTTE</button>
                 <button onclick="sol()" style="background:#cc0000">SOLUZIONE</button>
             </div>
             <div class="r-box">
