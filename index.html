@@ -36,7 +36,6 @@
                 const data = snapshot.val();
                 if(!data) return;
                 
-                // Reset grafico prima di applicare lo stato
                 document.querySelectorAll('.tile').forEach(t => {
                     t.classList.remove('active', 'revealed', 'highlight');
                     t.querySelector('.letter').innerText = '';
@@ -192,7 +191,7 @@
 <body>
     <div id="menu">
         <button class="m-btn" onclick="start('tabellone')">Schermo Tabellone</button>
-        <button class="m-btn" onclick="start('regia')" style="border-color: var(--accent);">Console Regia</button>
+        <button class="m-btn" onclick="start('regia')" style="border-color: var(--accent);">Console Tabellone</button>
     </div>
 
     <div id="view-tabellone">
